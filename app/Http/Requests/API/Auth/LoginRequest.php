@@ -3,6 +3,8 @@
 namespace App\Http\Requests\API\Auth;
 
 use App\Http\Requests\API\BaseApiRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class LoginRequest extends BaseApiRequest
 {
@@ -39,22 +41,5 @@ class LoginRequest extends BaseApiRequest
             'email.email' => 'The email must be a valid email address',
             'password.required' => 'A password is required',
         ];
-    }
-
-    /**
-     * Handle a failed validation attempt.
-     *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
-     * @return void
-     *
-     * @throws \Illuminate\Http\Exceptions\HttpResponseException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'status' => false,
-            'message' => 'Validation error',
-            'errors' => $validator->errors()
-        ], 422));
     }
 }

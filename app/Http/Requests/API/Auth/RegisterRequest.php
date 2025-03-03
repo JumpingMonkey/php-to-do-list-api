@@ -3,6 +3,8 @@
 namespace App\Http\Requests\API\Auth;
 
 use App\Http\Requests\API\BaseApiRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class RegisterRequest extends BaseApiRequest
 {
@@ -44,22 +46,5 @@ class RegisterRequest extends BaseApiRequest
             'password.min' => 'The password must be at least 8 characters',
             'password.confirmed' => 'The password confirmation does not match',
         ];
-    }
-
-    /**
-     * Handle a failed validation attempt.
-     *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
-     * @return void
-     *
-     * @throws \Illuminate\Http\Exceptions\HttpResponseException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'status' => false,
-            'message' => 'Validation error',
-            'errors' => $validator->errors()
-        ], 422));
     }
 }

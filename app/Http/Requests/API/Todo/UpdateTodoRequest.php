@@ -3,6 +3,8 @@
 namespace App\Http\Requests\API\Todo;
 
 use App\Http\Requests\API\BaseApiRequest;
+use Illuminate\Contracts\Validation\Validator;
+use Illuminate\Http\Exceptions\HttpResponseException;
 
 class UpdateTodoRequest extends BaseApiRequest
 {
@@ -41,22 +43,5 @@ class UpdateTodoRequest extends BaseApiRequest
             'title.max' => 'The title must not exceed 255 characters',
             'due_date.date' => 'The due date must be a valid date',
         ];
-    }
-
-    /**
-     * Handle a failed validation attempt.
-     *
-     * @param  \Illuminate\Contracts\Validation\Validator  $validator
-     * @return void
-     *
-     * @throws \Illuminate\Http\Exceptions\HttpResponseException
-     */
-    protected function failedValidation(Validator $validator)
-    {
-        throw new HttpResponseException(response()->json([
-            'status' => false,
-            'message' => 'Validation error',
-            'errors' => $validator->errors()
-        ], 422));
     }
 }
