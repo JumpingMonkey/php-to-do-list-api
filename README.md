@@ -2,6 +2,8 @@
 
 A RESTful API for a Todo List application built with Laravel 11 and Sanctum authentication.
 
+**Project URL:** [https://github.com/JumpingMonkey/php-to-do-list-api](https://github.com/JumpingMonkey/php-to-do-list-api)
+
 ## Features
 
 - User authentication (register, login, logout)
