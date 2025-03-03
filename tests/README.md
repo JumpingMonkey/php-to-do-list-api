@@ -73,12 +73,22 @@ These tests verify the functionality of the API endpoints by making HTTP request
   - 404 response for non-existent todos
   - Prevention of deletion for unauthenticated users
 
+- **PaginationAndFilteringTest**: Tests pagination and filtering functionality
+  - Pagination of todo lists with customizable page size
+  - Filtering by completion status
+  - Searching by title and description
+  - Filtering by due date range
+  - Sorting by different fields and directions
+  - Validation of sort parameters
+  - Combining multiple filters
+
 ### Unit Tests
 
 - **ApiResourceTest**: Tests the API resource classes
   - UserResource serialization
   - TodoResource serialization
   - TodoCollection serialization
+  - Pagination metadata in responses
 
 ## Test Helpers
 

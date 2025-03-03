@@ -53,9 +53,30 @@ class TodoCollection extends ResourceCollection
      */
     public function with($request)
     {
-        return [
+        $pagination = [];
+        
+        // Add pagination metadata if the resource is paginated
+        if ($this->resource instanceof \Illuminate\Pagination\AbstractPaginator) {
+            $pagination = [
+                'pagination' => [
+                    'total' => $this->resource->total(),
+                    'count' => $this->resource->count(),
+                    'per_page' => $this->resource->perPage(),
+                    'current_page' => $this->resource->currentPage(),
+                    'total_pages' => $this->resource->lastPage(),
+                    'links' => [
+                        'first' => $this->resource->url(1),
+                        'last' => $this->resource->url($this->resource->lastPage()),
+                        'prev' => $this->resource->previousPageUrl(),
+                        'next' => $this->resource->nextPageUrl(),
+                    ],
+                ],
+            ];
+        }
+        
+        return array_merge([
             'status' => $this->status,
             'message' => $this->message,
-        ];
+        ], $pagination);
     }
 }

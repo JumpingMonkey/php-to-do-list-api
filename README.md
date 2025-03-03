@@ -8,6 +8,7 @@ A RESTful API for a Todo List application built with Laravel 11 and Sanctum auth
 - Todo management (create, read, update, delete)
 - Token-based authentication with Laravel Sanctum
 - Password reset functionality
+- Pagination and filtering for todos with OOP design
 - Comprehensive test suite
 - Docker containerization for easy setup and deployment
 
@@ -68,6 +69,18 @@ A RESTful API for a Todo List application built with Laravel 11 and Sanctum auth
 ### Todo Management
 
 - **Get All Todos**: `GET /api/todos` (Requires authentication)
+  
+  Supports the following query parameters:
+  - `per_page`: Number of items per page (default: 10)
+  - `page`: Page number
+  - `completed`: Filter by completion status (true/false)
+  - `search`: Search in title and description
+  - `due_date_from`: Filter todos with due date from this date
+  - `due_date_to`: Filter todos with due date until this date
+  - `sort_by`: Field to sort by (id, title, completed, due_date, created_at, updated_at)
+  - `sort_direction`: Sort direction (asc/desc)
+  
+  Example: `GET /api/todos?per_page=5&completed=false&search=meeting&sort_by=due_date&sort_direction=asc`
 
 - **Create Todo**: `POST /api/todos` (Requires authentication)
   ```json
@@ -93,6 +106,27 @@ A RESTful API for a Todo List application built with Laravel 11 and Sanctum auth
 
 - **Delete Todo**: `DELETE /api/todos/{id}` (Requires authentication)
 
+## Architecture
+
+### OOP Filter System
+
+The API uses an object-oriented approach for filtering and pagination:
+
+1. **Base Filter Class**: A reusable abstract class that handles the application of filters
+2. **TodoFilter Class**: Specific implementation for Todo filtering with methods for each filter type
+3. **Filterable Trait**: Added to models to enable the filter functionality
+4. **Controller Integration**: Clean controller code that delegates filtering to the filter classes
+
+Key filtering features include:
+
+- **Flexible Date Handling**: Support for multiple date formats (ISO, US, European)
+- **Case-insensitive Search**: Search across title and description fields regardless of case
+- **Robust Error Handling**: Gracefully handles invalid inputs without breaking the application
+- **Comprehensive Sorting**: Sort by any field in ascending or descending order
+- **Customizable Pagination**: Control the number of items per page with metadata
+
+This design follows SOLID principles, making the code more maintainable and extensible. For detailed documentation on the filtering system, see [docs/filters.md](docs/filters.md).
+
 ## Testing
 
 The API includes a comprehensive test suite covering all controllers and actions. To run the tests:
@@ -105,6 +139,7 @@ The test suite includes:
 - Feature tests for all API endpoints
 - Authentication testing
 - Todo CRUD operation testing
+- Pagination and filtering testing
 - Resource serialization testing
 
 For more details on the testing approach, see the [tests/README.md](tests/README.md) file.
