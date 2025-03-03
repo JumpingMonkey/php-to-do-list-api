@@ -3,37 +3,24 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Auth\LoginRequest;
+use App\Http\Requests\API\Auth\RegisterRequest;
+use App\Http\Resources\API\UserResource;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
     /**
      * Register a new user.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\API\Auth\RegisterRequest  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -42,37 +29,21 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'status' => true,
-            'message' => 'User registered successfully',
-            'data' => [
-                'user' => $user,
-                'token' => $token
-            ]
-        ], 201);
+        return (new UserResource($user))
+            ->setMessage('User registered successfully')
+            ->additional(['data' => ['token' => $token]])
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
      * Login user and create token.
      *
-     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Http\Requests\API\Auth\LoginRequest  $request
      * @return \Illuminate\Http\JsonResponse
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'email' => 'required|email',
-            'password' => 'required|string',
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         if (!Auth::attempt($request->only('email', 'password'))) {
             return response()->json([
                 'status' => false,
@@ -83,14 +54,9 @@ class AuthController extends Controller
         $user = User::where('email', $request->email)->firstOrFail();
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
-            'status' => true,
-            'message' => 'User logged in successfully',
-            'data' => [
-                'user' => $user,
-                'token' => $token
-            ]
-        ]);
+        return (new UserResource($user))
+            ->setMessage('User logged in successfully')
+            ->additional(['data' => ['token' => $token]]);
     }
 
     /**
@@ -117,12 +83,7 @@ class AuthController extends Controller
      */
     public function profile(Request $request)
     {
-        return response()->json([
-            'status' => true,
-            'message' => 'User profile retrieved successfully',
-            'data' => [
-                'user' => $request->user()
-            ]
-        ]);
+        return (new UserResource($request->user()))
+            ->setMessage('User profile retrieved successfully');
     }
 }

@@ -3,9 +3,12 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\API\Todo\StoreTodoRequest;
+use App\Http\Requests\API\Todo\UpdateTodoRequest;
+use App\Http\Resources\API\TodoCollection;
+use App\Http\Resources\API\TodoResource;
 use App\Models\Todo;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Validator;
 
 class TodoController extends Controller
 {
@@ -16,33 +19,15 @@ class TodoController extends Controller
     {
         $todos = $request->user()->todos()->latest()->get();
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Todos retrieved successfully',
-            'data' => $todos
-        ]);
+        return (new TodoCollection($todos))
+            ->setMessage('Todos retrieved successfully');
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTodoRequest $request)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'completed' => 'nullable|boolean',
-            'due_date' => 'nullable|date'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $todo = $request->user()->todos()->create([
             'title' => $request->title,
             'description' => $request->description,
@@ -50,11 +35,10 @@ class TodoController extends Controller
             'due_date' => $request->due_date
         ]);
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Todo created successfully',
-            'data' => $todo
-        ], 201);
+        return (new TodoResource($todo))
+            ->setMessage('Todo created successfully')
+            ->response()
+            ->setStatusCode(201);
     }
 
     /**
@@ -71,33 +55,15 @@ class TodoController extends Controller
             ], 404);
         }
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Todo retrieved successfully',
-            'data' => $todo
-        ]);
+        return (new TodoResource($todo))
+            ->setMessage('Todo retrieved successfully');
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(UpdateTodoRequest $request, string $id)
     {
-        $validator = Validator::make($request->all(), [
-            'title' => 'sometimes|required|string|max:255',
-            'description' => 'nullable|string',
-            'completed' => 'nullable|boolean',
-            'due_date' => 'nullable|date'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Validation error',
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
         $todo = $request->user()->todos()->find($id);
 
         if (!$todo) {
@@ -109,11 +75,8 @@ class TodoController extends Controller
 
         $todo->update($request->only(['title', 'description', 'completed', 'due_date']));
 
-        return response()->json([
-            'status' => true,
-            'message' => 'Todo updated successfully',
-            'data' => $todo
-        ]);
+        return (new TodoResource($todo))
+            ->setMessage('Todo updated successfully');
     }
 
     /**
