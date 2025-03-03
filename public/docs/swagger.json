@@ -1,0 +1,857 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "Laravel Todo List API",
+        "description": "A RESTful API for a Todo List application built with Laravel 11 and Sanctum authentication",
+        "version": "1.0.0",
+        "contact": {
+            "email": "admin@example.com"
+        }
+    },
+    "host": "localhost:8000",
+    "basePath": "/api",
+    "schemes": [
+        "http",
+        "https"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "produces": [
+        "application/json"
+    ],
+    "securityDefinitions": {
+        "bearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+            "description": "JWT token in the format: Bearer {token}"
+        }
+    },
+    "paths": {
+        "/register": {
+            "post": {
+                "summary": "Register a new user",
+                "description": "Create a new user account and return an authentication token",
+                "responses": {
+                    "201": {
+                        "description": "User registered successfully",
+                        "schema": {
+                            "$ref": "#/definitions/AuthResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RegisterRequest"
+                        }
+                    }
+                ]
+            }
+        },
+        "/login": {
+            "post": {
+                "summary": "User login",
+                "description": "Authenticate a user and return a token",
+                "responses": {
+                    "200": {
+                        "description": "Login successful",
+                        "schema": {
+                            "$ref": "#/definitions/AuthResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Invalid credentials",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/LoginRequest"
+                        }
+                    }
+                ]
+            }
+        },
+        "/logout": {
+            "post": {
+                "summary": "User logout",
+                "description": "Invalidate the user's authentication token",
+                "responses": {
+                    "200": {
+                        "description": "Logout successful",
+                        "schema": {
+                            "$ref": "#/definitions/SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/user": {
+            "get": {
+                "summary": "Get user profile",
+                "description": "Retrieve the authenticated user's profile information",
+                "responses": {
+                    "200": {
+                        "description": "User profile retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/UserResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ]
+            }
+        },
+        "/forgot-password": {
+            "post": {
+                "summary": "Forgot password",
+                "description": "Send a password reset link to the user's email",
+                "responses": {
+                    "200": {
+                        "description": "Password reset link sent",
+                        "schema": {
+                            "$ref": "#/definitions/SuccessResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ForgotPasswordRequest"
+                        }
+                    }
+                ]
+            }
+        },
+        "/reset-password": {
+            "post": {
+                "summary": "Reset password",
+                "description": "Reset the user's password using the token sent to their email",
+                "responses": {
+                    "200": {
+                        "description": "Password reset successful",
+                        "schema": {
+                            "$ref": "#/definitions/SuccessResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error or invalid token",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/ResetPasswordRequest"
+                        }
+                    }
+                ]
+            }
+        },
+        "/todos": {
+            "get": {
+                "summary": "Get all todos",
+                "description": "Retrieve a paginated list of todos for the authenticated user with filtering options",
+                "responses": {
+                    "200": {
+                        "description": "Todos retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/TodoCollectionResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "description": "Number of items per page",
+                        "type": "integer",
+                        "required": false,
+                        "default": "10"
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "description": "Page number",
+                        "type": "integer",
+                        "required": false,
+                        "default": "1"
+                    },
+                    {
+                        "name": "completed",
+                        "in": "query",
+                        "description": "Filter by completion status (true/false)",
+                        "type": "boolean",
+                        "required": false
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Search term for title and description (case-insensitive)",
+                        "type": "string",
+                        "required": false
+                    },
+                    {
+                        "name": "due_date_from",
+                        "in": "query",
+                        "description": "Filter todos with due date from this date (supports multiple formats)",
+                        "type": "string",
+                        "required": false,
+                        "format": "date"
+                    },
+                    {
+                        "name": "due_date_to",
+                        "in": "query",
+                        "description": "Filter todos with due date until this date (supports multiple formats)",
+                        "type": "string",
+                        "required": false,
+                        "format": "date"
+                    },
+                    {
+                        "name": "sort_by",
+                        "in": "query",
+                        "description": "Field to sort by (id, title, completed, due_date, created_at, updated_at)",
+                        "type": "string",
+                        "required": false,
+                        "default": "created_at"
+                    },
+                    {
+                        "name": "sort_direction",
+                        "in": "query",
+                        "description": "Sort direction (asc/desc)",
+                        "type": "string",
+                        "required": false,
+                        "default": "desc"
+                    }
+                ]
+            },
+            "post": {
+                "summary": "Create todo",
+                "description": "Create a new todo for the authenticated user",
+                "responses": {
+                    "201": {
+                        "description": "Todo created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/TodoResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/TodoRequest"
+                        }
+                    }
+                ]
+            }
+        },
+        "/todos/{id}": {
+            "get": {
+                "summary": "Get todo",
+                "description": "Retrieve a specific todo by ID",
+                "responses": {
+                    "200": {
+                        "description": "Todo retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/TodoResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Todo not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Todo ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            },
+            "put": {
+                "summary": "Update todo",
+                "description": "Update a specific todo by ID",
+                "responses": {
+                    "200": {
+                        "description": "Todo updated successfully",
+                        "schema": {
+                            "$ref": "#/definitions/TodoResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Todo not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "$ref": "#/definitions/ValidationErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Todo ID",
+                        "type": "integer",
+                        "required": true
+                    },
+                    {
+                        "name": "body",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/TodoRequest"
+                        }
+                    }
+                ]
+            },
+            "delete": {
+                "summary": "Delete todo",
+                "description": "Delete a specific todo by ID",
+                "responses": {
+                    "200": {
+                        "description": "Todo deleted successfully",
+                        "schema": {
+                            "$ref": "#/definitions/SuccessResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthenticated",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "403": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Todo not found",
+                        "schema": {
+                            "$ref": "#/definitions/ErrorResponse"
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "bearerAuth": []
+                    }
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "Todo ID",
+                        "type": "integer",
+                        "required": true
+                    }
+                ]
+            }
+        }
+    },
+    "definitions": {
+        "RegisterRequest": {
+            "type": "object",
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "User's full name"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "User's email address",
+                    "format": "email"
+                },
+                "password": {
+                    "type": "string",
+                    "description": "User's password",
+                    "format": "password"
+                },
+                "password_confirmation": {
+                    "type": "string",
+                    "description": "Password confirmation",
+                    "format": "password"
+                }
+            },
+            "required": [
+                "name",
+                "email",
+                "password",
+                "password_confirmation"
+            ]
+        },
+        "LoginRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "description": "User's email address",
+                    "format": "email"
+                },
+                "password": {
+                    "type": "string",
+                    "description": "User's password",
+                    "format": "password"
+                }
+            },
+            "required": [
+                "email",
+                "password"
+            ]
+        },
+        "ForgotPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string",
+                    "description": "User's email address",
+                    "format": "email"
+                }
+            },
+            "required": [
+                "email"
+            ]
+        },
+        "ResetPasswordRequest": {
+            "type": "object",
+            "properties": {
+                "token": {
+                    "type": "string",
+                    "description": "Password reset token"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "User's email address",
+                    "format": "email"
+                },
+                "password": {
+                    "type": "string",
+                    "description": "New password",
+                    "format": "password"
+                },
+                "password_confirmation": {
+                    "type": "string",
+                    "description": "New password confirmation",
+                    "format": "password"
+                }
+            },
+            "required": [
+                "token",
+                "email",
+                "password",
+                "password_confirmation"
+            ]
+        },
+        "TodoRequest": {
+            "type": "object",
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Todo title"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Todo description"
+                },
+                "completed": {
+                    "type": "boolean",
+                    "description": "Todo completion status"
+                },
+                "due_date": {
+                    "type": "string",
+                    "description": "Todo due date (YYYY-MM-DD)",
+                    "format": "date"
+                }
+            },
+            "required": [
+                "title"
+            ]
+        },
+        "AuthResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean",
+                    "description": "Response status"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                },
+                "data": {
+                    "type": "object",
+                    "description": "",
+                    "properties": {
+                        "token": {
+                            "type": "string",
+                            "description": "Authentication token"
+                        },
+                        "user": {
+                            "type": "object",
+                            "description": "User information",
+                            "$ref": "#/definitions/User"
+                        }
+                    }
+                }
+            }
+        },
+        "UserResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean",
+                    "description": "Response status"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                },
+                "data": {
+                    "type": "object",
+                    "description": "User information",
+                    "$ref": "#/definitions/User"
+                }
+            }
+        },
+        "TodoResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean",
+                    "description": "Response status"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                },
+                "data": {
+                    "type": "object",
+                    "description": "Todo information",
+                    "$ref": "#/definitions/Todo"
+                }
+            }
+        },
+        "TodoCollectionResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean",
+                    "description": "Response status"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                },
+                "data": {
+                    "type": "array",
+                    "description": "List of todos",
+                    "items": {
+                        "$ref": "#/definitions/Todo"
+                    }
+                },
+                "pagination": {
+                    "type": "object",
+                    "description": "Pagination information",
+                    "$ref": "#/definitions/Pagination"
+                }
+            }
+        },
+        "SuccessResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean",
+                    "description": "Response status"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Response message"
+                }
+            }
+        },
+        "ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean",
+                    "description": "Response status (false)"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Error message"
+                }
+            }
+        },
+        "ValidationErrorResponse": {
+            "type": "object",
+            "properties": {
+                "status": {
+                    "type": "boolean",
+                    "description": "Response status (false)"
+                },
+                "message": {
+                    "type": "string",
+                    "description": "Error message"
+                },
+                "errors": {
+                    "type": "object",
+                    "description": "Validation errors"
+                }
+            }
+        },
+        "User": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "description": "User ID"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "User's full name"
+                },
+                "email": {
+                    "type": "string",
+                    "description": "User's email address",
+                    "format": "email"
+                },
+                "created_at": {
+                    "type": "string",
+                    "description": "Creation timestamp",
+                    "format": "date-time"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "description": "Last update timestamp",
+                    "format": "date-time"
+                }
+            }
+        },
+        "Todo": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer",
+                    "description": "Todo ID"
+                },
+                "user_id": {
+                    "type": "integer",
+                    "description": "User ID"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Todo title"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Todo description"
+                },
+                "completed": {
+                    "type": "boolean",
+                    "description": "Todo completion status"
+                },
+                "due_date": {
+                    "type": "string",
+                    "description": "Todo due date",
+                    "format": "date"
+                },
+                "created_at": {
+                    "type": "string",
+                    "description": "Creation timestamp",
+                    "format": "date-time"
+                },
+                "updated_at": {
+                    "type": "string",
+                    "description": "Last update timestamp",
+                    "format": "date-time"
+                }
+            }
+        },
+        "Pagination": {
+            "type": "object",
+            "properties": {
+                "total": {
+                    "type": "integer",
+                    "description": "Total number of items"
+                },
+                "count": {
+                    "type": "integer",
+                    "description": "Number of items on current page"
+                },
+                "per_page": {
+                    "type": "integer",
+                    "description": "Number of items per page"
+                },
+                "current_page": {
+                    "type": "integer",
+                    "description": "Current page number"
+                },
+                "total_pages": {
+                    "type": "integer",
+                    "description": "Total number of pages"
+                },
+                "links": {
+                    "type": "object",
+                    "description": "",
+                    "properties": {
+                        "first": {
+                            "type": "string",
+                            "description": "URL to first page"
+                        },
+                        "last": {
+                            "type": "string",
+                            "description": "URL to last page"
+                        },
+                        "prev": {
+                            "type": "string",
+                            "description": "URL to previous page"
+                        },
+                        "next": {
+                            "type": "string",
+                            "description": "URL to next page"
+                        }
+                    }
+                }
+            }
+        }
+    }
+}

@@ -157,6 +157,41 @@ A Postman collection file is included in the repository for testing the API endp
 - Laravel Sanctum for API authentication
 - PHPUnit for testing
 
+## API Documentation
+
+The API is documented using Swagger (OpenAPI). You can access the documentation in the following ways:
+
+### Using the Laravel Application (Recommended)
+
+1. Make sure your Laravel application is running:
+   ```bash
+   docker-compose up -d
+   ```
+
+2. Visit the API documentation at:
+   ```
+   http://localhost:8000/api-docs
+   ```
+
+### Viewing Raw Specification Files
+
+You can also view the raw API specification in:
+- XML format: [docs/swagger.xml](docs/swagger.xml)
+- JSON format (after generation): [docs/swagger.json](docs/swagger.json)
+
+To generate the JSON file from the XML definition:
+```bash
+cd docs
+php generate-swagger-json.php
+```
+
+The documentation includes:
+- All API endpoints with detailed descriptions
+- Request and response models
+- Authentication requirements
+- Filtering and pagination parameters
+- Example requests and responses
+
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

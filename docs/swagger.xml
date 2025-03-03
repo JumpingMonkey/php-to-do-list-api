@@ -1,0 +1,605 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<swagger xmlns="http://swagger.io/schema/swagger" version="2.0">
+    <info>
+        <title>Laravel Todo List API</title>
+        <description>A RESTful API for a Todo List application built with Laravel 11 and Sanctum authentication</description>
+        <version>1.0.0</version>
+        <contact>
+            <email>admin@example.com</email>
+        </contact>
+    </info>
+    <host>localhost:8000</host>
+    <basePath>/api</basePath>
+    <schemes>
+        <scheme>http</scheme>
+        <scheme>https</scheme>
+    </schemes>
+    <consumes>
+        <consume>application/json</consume>
+    </consumes>
+    <produces>
+        <produce>application/json</produce>
+    </produces>
+    
+    <securityDefinitions>
+        <securityDefinition id="bearerAuth" type="apiKey">
+            <name>Authorization</name>
+            <in>header</in>
+            <description>JWT token in the format: Bearer {token}</description>
+        </securityDefinition>
+    </securityDefinitions>
+    
+    <paths>
+        <!-- Authentication Endpoints -->
+        <path url="/register">
+            <operation method="post">
+                <summary>Register a new user</summary>
+                <description>Create a new user account and return an authentication token</description>
+                <parameters>
+                    <parameter name="body" in="body" required="true">
+                        <schema ref="#/definitions/RegisterRequest"/>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="201">
+                        <description>User registered successfully</description>
+                        <schema ref="#/definitions/AuthResponse"/>
+                    </response>
+                    <response code="422">
+                        <description>Validation error</description>
+                        <schema ref="#/definitions/ValidationErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+        
+        <path url="/login">
+            <operation method="post">
+                <summary>User login</summary>
+                <description>Authenticate a user and return a token</description>
+                <parameters>
+                    <parameter name="body" in="body" required="true">
+                        <schema ref="#/definitions/LoginRequest"/>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="200">
+                        <description>Login successful</description>
+                        <schema ref="#/definitions/AuthResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Invalid credentials</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="422">
+                        <description>Validation error</description>
+                        <schema ref="#/definitions/ValidationErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+        
+        <path url="/logout">
+            <operation method="post">
+                <summary>User logout</summary>
+                <description>Invalidate the user's authentication token</description>
+                <security>
+                    <securityRequirement name="bearerAuth"/>
+                </security>
+                <responses>
+                    <response code="200">
+                        <description>Logout successful</description>
+                        <schema ref="#/definitions/SuccessResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Unauthenticated</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+        
+        <path url="/user">
+            <operation method="get">
+                <summary>Get user profile</summary>
+                <description>Retrieve the authenticated user's profile information</description>
+                <security>
+                    <securityRequirement name="bearerAuth"/>
+                </security>
+                <responses>
+                    <response code="200">
+                        <description>User profile retrieved successfully</description>
+                        <schema ref="#/definitions/UserResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Unauthenticated</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+        
+        <path url="/forgot-password">
+            <operation method="post">
+                <summary>Forgot password</summary>
+                <description>Send a password reset link to the user's email</description>
+                <parameters>
+                    <parameter name="body" in="body" required="true">
+                        <schema ref="#/definitions/ForgotPasswordRequest"/>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="200">
+                        <description>Password reset link sent</description>
+                        <schema ref="#/definitions/SuccessResponse"/>
+                    </response>
+                    <response code="422">
+                        <description>Validation error</description>
+                        <schema ref="#/definitions/ValidationErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+        
+        <path url="/reset-password">
+            <operation method="post">
+                <summary>Reset password</summary>
+                <description>Reset the user's password using the token sent to their email</description>
+                <parameters>
+                    <parameter name="body" in="body" required="true">
+                        <schema ref="#/definitions/ResetPasswordRequest"/>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="200">
+                        <description>Password reset successful</description>
+                        <schema ref="#/definitions/SuccessResponse"/>
+                    </response>
+                    <response code="422">
+                        <description>Validation error or invalid token</description>
+                        <schema ref="#/definitions/ValidationErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+        
+        <!-- Todo Endpoints -->
+        <path url="/todos">
+            <operation method="get">
+                <summary>Get all todos</summary>
+                <description>Retrieve a paginated list of todos for the authenticated user with filtering options</description>
+                <security>
+                    <securityRequirement name="bearerAuth"/>
+                </security>
+                <parameters>
+                    <parameter name="per_page" in="query" type="integer" required="false" default="10">
+                        <description>Number of items per page</description>
+                    </parameter>
+                    <parameter name="page" in="query" type="integer" required="false" default="1">
+                        <description>Page number</description>
+                    </parameter>
+                    <parameter name="completed" in="query" type="boolean" required="false">
+                        <description>Filter by completion status (true/false)</description>
+                    </parameter>
+                    <parameter name="search" in="query" type="string" required="false">
+                        <description>Search term for title and description (case-insensitive)</description>
+                    </parameter>
+                    <parameter name="due_date_from" in="query" type="string" required="false" format="date">
+                        <description>Filter todos with due date from this date (supports multiple formats)</description>
+                    </parameter>
+                    <parameter name="due_date_to" in="query" type="string" required="false" format="date">
+                        <description>Filter todos with due date until this date (supports multiple formats)</description>
+                    </parameter>
+                    <parameter name="sort_by" in="query" type="string" required="false" default="created_at">
+                        <description>Field to sort by (id, title, completed, due_date, created_at, updated_at)</description>
+                    </parameter>
+                    <parameter name="sort_direction" in="query" type="string" required="false" default="desc">
+                        <description>Sort direction (asc/desc)</description>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="200">
+                        <description>Todos retrieved successfully</description>
+                        <schema ref="#/definitions/TodoCollectionResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Unauthenticated</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+            
+            <operation method="post">
+                <summary>Create todo</summary>
+                <description>Create a new todo for the authenticated user</description>
+                <security>
+                    <securityRequirement name="bearerAuth"/>
+                </security>
+                <parameters>
+                    <parameter name="body" in="body" required="true">
+                        <schema ref="#/definitions/TodoRequest"/>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="201">
+                        <description>Todo created successfully</description>
+                        <schema ref="#/definitions/TodoResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Unauthenticated</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="422">
+                        <description>Validation error</description>
+                        <schema ref="#/definitions/ValidationErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+        
+        <path url="/todos/{id}">
+            <operation method="get">
+                <summary>Get todo</summary>
+                <description>Retrieve a specific todo by ID</description>
+                <security>
+                    <securityRequirement name="bearerAuth"/>
+                </security>
+                <parameters>
+                    <parameter name="id" in="path" type="integer" required="true">
+                        <description>Todo ID</description>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="200">
+                        <description>Todo retrieved successfully</description>
+                        <schema ref="#/definitions/TodoResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Unauthenticated</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="403">
+                        <description>Unauthorized</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="404">
+                        <description>Todo not found</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+            
+            <operation method="put">
+                <summary>Update todo</summary>
+                <description>Update a specific todo by ID</description>
+                <security>
+                    <securityRequirement name="bearerAuth"/>
+                </security>
+                <parameters>
+                    <parameter name="id" in="path" type="integer" required="true">
+                        <description>Todo ID</description>
+                    </parameter>
+                    <parameter name="body" in="body" required="true">
+                        <schema ref="#/definitions/TodoRequest"/>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="200">
+                        <description>Todo updated successfully</description>
+                        <schema ref="#/definitions/TodoResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Unauthenticated</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="403">
+                        <description>Unauthorized</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="404">
+                        <description>Todo not found</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="422">
+                        <description>Validation error</description>
+                        <schema ref="#/definitions/ValidationErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+            
+            <operation method="delete">
+                <summary>Delete todo</summary>
+                <description>Delete a specific todo by ID</description>
+                <security>
+                    <securityRequirement name="bearerAuth"/>
+                </security>
+                <parameters>
+                    <parameter name="id" in="path" type="integer" required="true">
+                        <description>Todo ID</description>
+                    </parameter>
+                </parameters>
+                <responses>
+                    <response code="200">
+                        <description>Todo deleted successfully</description>
+                        <schema ref="#/definitions/SuccessResponse"/>
+                    </response>
+                    <response code="401">
+                        <description>Unauthenticated</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="403">
+                        <description>Unauthorized</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                    <response code="404">
+                        <description>Todo not found</description>
+                        <schema ref="#/definitions/ErrorResponse"/>
+                    </response>
+                </responses>
+            </operation>
+        </path>
+    </paths>
+    
+    <definitions>
+        <!-- Request Models -->
+        <definition id="RegisterRequest">
+            <properties>
+                <property name="name" type="string" required="true">
+                    <description>User's full name</description>
+                </property>
+                <property name="email" type="string" format="email" required="true">
+                    <description>User's email address</description>
+                </property>
+                <property name="password" type="string" format="password" required="true" minLength="8">
+                    <description>User's password</description>
+                </property>
+                <property name="password_confirmation" type="string" format="password" required="true">
+                    <description>Password confirmation</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="LoginRequest">
+            <properties>
+                <property name="email" type="string" format="email" required="true">
+                    <description>User's email address</description>
+                </property>
+                <property name="password" type="string" format="password" required="true">
+                    <description>User's password</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="ForgotPasswordRequest">
+            <properties>
+                <property name="email" type="string" format="email" required="true">
+                    <description>User's email address</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="ResetPasswordRequest">
+            <properties>
+                <property name="token" type="string" required="true">
+                    <description>Password reset token</description>
+                </property>
+                <property name="email" type="string" format="email" required="true">
+                    <description>User's email address</description>
+                </property>
+                <property name="password" type="string" format="password" required="true" minLength="8">
+                    <description>New password</description>
+                </property>
+                <property name="password_confirmation" type="string" format="password" required="true">
+                    <description>New password confirmation</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="TodoRequest">
+            <properties>
+                <property name="title" type="string" required="true" maxLength="255">
+                    <description>Todo title</description>
+                </property>
+                <property name="description" type="string" required="false">
+                    <description>Todo description</description>
+                </property>
+                <property name="completed" type="boolean" required="false" default="false">
+                    <description>Todo completion status</description>
+                </property>
+                <property name="due_date" type="string" format="date" required="false">
+                    <description>Todo due date (YYYY-MM-DD)</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <!-- Response Models -->
+        <definition id="AuthResponse">
+            <properties>
+                <property name="status" type="boolean">
+                    <description>Response status</description>
+                </property>
+                <property name="message" type="string">
+                    <description>Response message</description>
+                </property>
+                <property name="data" type="object">
+                    <properties>
+                        <property name="token" type="string">
+                            <description>Authentication token</description>
+                        </property>
+                        <property name="user" type="object" ref="#/definitions/User">
+                            <description>User information</description>
+                        </property>
+                    </properties>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="UserResponse">
+            <properties>
+                <property name="status" type="boolean">
+                    <description>Response status</description>
+                </property>
+                <property name="message" type="string">
+                    <description>Response message</description>
+                </property>
+                <property name="data" type="object" ref="#/definitions/User">
+                    <description>User information</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="TodoResponse">
+            <properties>
+                <property name="status" type="boolean">
+                    <description>Response status</description>
+                </property>
+                <property name="message" type="string">
+                    <description>Response message</description>
+                </property>
+                <property name="data" type="object" ref="#/definitions/Todo">
+                    <description>Todo information</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="TodoCollectionResponse">
+            <properties>
+                <property name="status" type="boolean">
+                    <description>Response status</description>
+                </property>
+                <property name="message" type="string">
+                    <description>Response message</description>
+                </property>
+                <property name="data" type="array">
+                    <items ref="#/definitions/Todo"/>
+                    <description>List of todos</description>
+                </property>
+                <property name="pagination" type="object" ref="#/definitions/Pagination">
+                    <description>Pagination information</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="SuccessResponse">
+            <properties>
+                <property name="status" type="boolean">
+                    <description>Response status</description>
+                </property>
+                <property name="message" type="string">
+                    <description>Response message</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="ErrorResponse">
+            <properties>
+                <property name="status" type="boolean">
+                    <description>Response status (false)</description>
+                </property>
+                <property name="message" type="string">
+                    <description>Error message</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="ValidationErrorResponse">
+            <properties>
+                <property name="status" type="boolean">
+                    <description>Response status (false)</description>
+                </property>
+                <property name="message" type="string">
+                    <description>Error message</description>
+                </property>
+                <property name="errors" type="object">
+                    <description>Validation errors</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <!-- Data Models -->
+        <definition id="User">
+            <properties>
+                <property name="id" type="integer">
+                    <description>User ID</description>
+                </property>
+                <property name="name" type="string">
+                    <description>User's full name</description>
+                </property>
+                <property name="email" type="string" format="email">
+                    <description>User's email address</description>
+                </property>
+                <property name="created_at" type="string" format="date-time">
+                    <description>Creation timestamp</description>
+                </property>
+                <property name="updated_at" type="string" format="date-time">
+                    <description>Last update timestamp</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="Todo">
+            <properties>
+                <property name="id" type="integer">
+                    <description>Todo ID</description>
+                </property>
+                <property name="user_id" type="integer">
+                    <description>User ID</description>
+                </property>
+                <property name="title" type="string">
+                    <description>Todo title</description>
+                </property>
+                <property name="description" type="string">
+                    <description>Todo description</description>
+                </property>
+                <property name="completed" type="boolean">
+                    <description>Todo completion status</description>
+                </property>
+                <property name="due_date" type="string" format="date">
+                    <description>Todo due date</description>
+                </property>
+                <property name="created_at" type="string" format="date-time">
+                    <description>Creation timestamp</description>
+                </property>
+                <property name="updated_at" type="string" format="date-time">
+                    <description>Last update timestamp</description>
+                </property>
+            </properties>
+        </definition>
+        
+        <definition id="Pagination">
+            <properties>
+                <property name="total" type="integer">
+                    <description>Total number of items</description>
+                </property>
+                <property name="count" type="integer">
+                    <description>Number of items on current page</description>
+                </property>
+                <property name="per_page" type="integer">
+                    <description>Number of items per page</description>
+                </property>
+                <property name="current_page" type="integer">
+                    <description>Current page number</description>
+                </property>
+                <property name="total_pages" type="integer">
+                    <description>Total number of pages</description>
+                </property>
+                <property name="links" type="object">
+                    <properties>
+                        <property name="first" type="string">
+                            <description>URL to first page</description>
+                        </property>
+                        <property name="last" type="string">
+                            <description>URL to last page</description>
+                        </property>
+                        <property name="prev" type="string">
+                            <description>URL to previous page</description>
+                        </property>
+                        <property name="next" type="string">
+                            <description>URL to next page</description>
+                        </property>
+                    </properties>
+                </property>
+            </properties>
+        </definition>
+    </definitions>
+</swagger>
