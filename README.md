@@ -7,6 +7,8 @@ A RESTful API for a Todo List application built with Laravel 11 and Sanctum auth
 - User authentication (register, login, logout)
 - Todo management (create, read, update, delete)
 - Token-based authentication with Laravel Sanctum
+- Password reset functionality
+- Comprehensive test suite
 - Docker containerization for easy setup and deployment
 
 ## Setup and Installation
@@ -46,6 +48,23 @@ A RESTful API for a Todo List application built with Laravel 11 and Sanctum auth
 
 - **User Profile**: `GET /api/user` (Requires authentication)
 
+- **Forgot Password**: `POST /api/forgot-password`
+  ```json
+  {
+    "email": "user@example.com"
+  }
+  ```
+
+- **Reset Password**: `POST /api/reset-password`
+  ```json
+  {
+    "token": "reset-token-from-email",
+    "email": "user@example.com",
+    "password": "new-password",
+    "password_confirmation": "new-password"
+  }
+  ```
+
 ### Todo Management
 
 - **Get All Todos**: `GET /api/todos` (Requires authentication)
@@ -74,6 +93,22 @@ A RESTful API for a Todo List application built with Laravel 11 and Sanctum auth
 
 - **Delete Todo**: `DELETE /api/todos/{id}` (Requires authentication)
 
+## Testing
+
+The API includes a comprehensive test suite covering all controllers and actions. To run the tests:
+
+```bash
+docker-compose exec app php artisan test
+```
+
+The test suite includes:
+- Feature tests for all API endpoints
+- Authentication testing
+- Todo CRUD operation testing
+- Resource serialization testing
+
+For more details on the testing approach, see the [tests/README.md](tests/README.md) file.
+
 ## Postman Collection
 
 A Postman collection file is included in the repository for testing the API endpoints. Import the `Todo-API.postman_collection.json` file into Postman to get started.
@@ -85,6 +120,7 @@ A Postman collection file is included in the repository for testing the API endp
 - MySQL 8.0
 - Docker
 - Laravel Sanctum for API authentication
+- PHPUnit for testing
 
 ## License
 
